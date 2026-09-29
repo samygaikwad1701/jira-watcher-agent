@@ -79,7 +79,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - uses: gitleaks/gitleaks-action@v2
-        env:
-          GITLEAKS_LICENSE: ""
+        with:
+          fetch-depth: 0   # gitleaks needs full history to scan every commit
+
+      # We install the gitleaks binary directly instead of using
+      # gitleaks/gitleaks-action@v2, which now requires GITHUB_TOKEN (and a
+      # paid license for org-owned repos) — that combination fails on
+      # Dependabot PRs because their `secrets` context is restricted.
+      - name: Install gitleaks
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz \
+            | tar -xz gitleaks
+          sudo mv gitleaks /usr/local/bin/
+          gitleaks version
+
+      - name: Scan repo for leaked secrets
+        run: gitleaks detect --source . --redact --verbose --no-banner
