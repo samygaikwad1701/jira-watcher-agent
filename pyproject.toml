@@ -1,0 +1,74 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jira-watcher-agent"
+dynamic = ["version"]
+description = "AI-powered JIRA planner, organizer, and triage CLI. Fetch tickets assigned to you, get an LLM digest by category, and investigate potential resolutions — powered by Claude Code, OpenAI Codex, or Cursor Agent."
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Sameer Gaikwad", email = "samygaikwad@gmail.com" },
+]
+keywords = [
+    "jira",
+    "jira-cli",
+    "jira-planner",
+    "jira-organizer",
+    "jira-triage",
+    "jira-agent",
+    "jira-watcher",
+    "jira-ai",
+    "ai-agent",
+    "llm",
+    "claude",
+    "claude-code",
+    "codex",
+    "cursor",
+    "ticket-triage",
+    "productivity",
+    "sre",
+    "incident-response",
+    "devtools",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Bug Tracking",
+    "Topic :: Utilities",
+    "Typing :: Typed",
+]
+dependencies = [
+    "requests>=2.31",
+    "python-dotenv>=1.0",
+    "rich>=13.7",
+]
+
+[project.urls]
+Homepage = "https://github.com/samygaikwad1701/jira-watcher-agent"
+Repository = "https://github.com/samygaikwad1701/jira-watcher-agent"
+Issues = "https://github.com/samygaikwad1701/jira-watcher-agent/issues"
+Documentation = "https://github.com/samygaikwad1701/jira-watcher-agent#readme"
+
+[project.scripts]
+watcher = "watcher.cli:main"
+jira-watcher = "watcher.cli:main"
+jira-watcher-agent = "watcher.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["watcher*"]
+
+[tool.setuptools.dynamic]
+version = { attr = "watcher.__version__" }

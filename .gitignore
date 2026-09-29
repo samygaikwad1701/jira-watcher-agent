@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.env.local
+.DS_Store
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Watcher's local ticket→category memory when installed from source.
+# Contains ticket keys and cached categories — user-specific, don't commit.
+memory/
