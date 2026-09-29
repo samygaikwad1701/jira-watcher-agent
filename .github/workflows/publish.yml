@@ -29,6 +29,17 @@ jobs:
       id-token: write   # OIDC token for trusted publishing
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # need history to verify the tag commit is on main
+
+      - name: Verify tag commit is on the main branch
+        run: |
+          TAG_SHA=$(git rev-list -n 1 "$GITHUB_REF")
+          if ! git branch --contains "$TAG_SHA" -r | grep -qE '^\s+origin/main$'; then
+            echo "::error::Tag $GITHUB_REF_NAME points at $TAG_SHA which is not on origin/main."
+            echo "Publish only runs for tags on the main branch. Merge to main, then re-tag."
+            exit 1
+          fi
 
       - name: Set up Python
         uses: actions/setup-python@v5

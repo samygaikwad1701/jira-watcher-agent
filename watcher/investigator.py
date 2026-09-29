@@ -15,8 +15,9 @@ from __future__ import annotations
 import json
 import re
 import subprocess
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Any, Iterable, Optional
+from typing import Any, Optional
 from urllib.parse import urlparse
 
 import requests
@@ -24,7 +25,6 @@ import requests
 from .jira_client import JiraClient, Ticket
 from .memory import Memory
 from .providers import ProviderError, run_provider
-
 
 # ---------- URL extraction ----------
 
@@ -63,15 +63,29 @@ JENKINS_JOB_RE = re.compile(
 # Reserved first-segment paths on Bitbucket / GitHub that aren't real repos.
 _BB_RESERVED = {"workspaces", "account", "repo", "dashboard", "settings", "repos", "snippets"}
 _GH_RESERVED = {
-    "orgs", "settings", "notifications", "issues", "pulls", "features",
-    "explore", "marketplace", "topics", "trending", "collections", "events",
-    "login", "logout", "signup", "search", "about",
+    "orgs",
+    "settings",
+    "notifications",
+    "issues",
+    "pulls",
+    "features",
+    "explore",
+    "marketplace",
+    "topics",
+    "trending",
+    "collections",
+    "events",
+    "login",
+    "logout",
+    "signup",
+    "search",
+    "about",
 }
 
 
 @dataclass
 class PRRef:
-    provider: str            # "bitbucket-cloud" | "bitbucket-dc" | "github"
+    provider: str  # "bitbucket-cloud" | "bitbucket-dc" | "github"
     owner_or_workspace: str  # workspace (BB Cloud) / project (BB DC) / org (GH)
     repo: str
     number: str
@@ -91,7 +105,7 @@ class PRSummary:
 
 @dataclass
 class RepoRef:
-    provider: str            # "bitbucket-cloud" | "bitbucket-dc" | "github"
+    provider: str  # "bitbucket-cloud" | "bitbucket-dc" | "github"
     owner_or_workspace: str
     repo: str
     url: str
@@ -110,8 +124,8 @@ class RepoSummary:
 
 @dataclass
 class JenkinsJobRef:
-    base_url: str            # scheme://host[:port]
-    job_path: str            # /job/foo[/job/bar]
+    base_url: str  # scheme://host[:port]
+    job_path: str  # /job/foo[/job/bar]
     build_number: Optional[str]
     url: str
 
@@ -123,7 +137,7 @@ class JenkinsJobSummary:
     disabled: bool = False
     last_build_number: Optional[int] = None
     last_build_status: str = ""  # SUCCESS / FAILURE / UNSTABLE / ABORTED / ""
-    last_build_at: str = ""      # ISO timestamp
+    last_build_at: str = ""  # ISO timestamp
     fetched: bool = False
     error: str = ""
 
@@ -237,9 +251,7 @@ def _extract_jenkins_refs(text: str) -> list[JenkinsJobRef]:
     return out
 
 
-def _collect_jenkins_refs(
-    t: Ticket, remote_links: list[dict[str, Any]]
-) -> list[JenkinsJobRef]:
+def _collect_jenkins_refs(t: Ticket, remote_links: list[dict[str, Any]]) -> list[JenkinsJobRef]:
     seen: set[tuple[str, str]] = set()
     out: list[JenkinsJobRef] = []
     for source in _iter_text_sources(t, remote_links):
@@ -275,6 +287,7 @@ def _collect_other_links(
 
 
 # ---------- PR fetching ----------
+
 
 def _fetch_bitbucket_cloud_pr(bb_client, ref: PRRef) -> PRSummary:
     api = bb_client.api_base
@@ -323,7 +336,10 @@ def _fetch_github_pr(gh_client, ref: PRRef) -> PRSummary:
             # Use `gh api` so we inherit the CLI's auth.
             result = subprocess.run(
                 ["gh", "api", f"/repos/{ref.owner_or_workspace}/{ref.repo}/pulls/{ref.number}"],
-                capture_output=True, text=True, timeout=gh_client.timeout, check=True,
+                capture_output=True,
+                text=True,
+                timeout=gh_client.timeout,
+                check=True,
             )
             data = json.loads(result.stdout) or {}
         else:
@@ -362,6 +378,7 @@ def _fetch_pr(bb_client, gh_client, ref: PRRef) -> PRSummary:
 
 
 # ---------- repo existence fetching ----------
+
 
 def _fetch_bitbucket_cloud_repo(bb_client, ref: RepoRef) -> RepoSummary:
     url = f"{bb_client.api_base}/repositories/{ref.owner_or_workspace}/{ref.repo}"
@@ -410,7 +427,10 @@ def _fetch_github_repo(gh_client, ref: RepoRef) -> RepoSummary:
         if gh_client.use_gh:
             result = subprocess.run(
                 ["gh", "api", path],
-                capture_output=True, text=True, timeout=gh_client.timeout, check=False,
+                capture_output=True,
+                text=True,
+                timeout=gh_client.timeout,
+                check=False,
             )
             if result.returncode != 0:
                 stderr = (result.stderr or "").lower()
@@ -419,9 +439,7 @@ def _fetch_github_repo(gh_client, ref: RepoRef) -> RepoSummary:
                 return RepoSummary(ref=ref, error=(result.stderr or "").strip()[:200])
             data = json.loads(result.stdout) or {}
         else:
-            resp = gh_client.session.get(
-                f"{gh_client.api_base}{path}", timeout=gh_client.timeout
-            )
+            resp = gh_client.session.get(f"{gh_client.api_base}{path}", timeout=gh_client.timeout)
             if resp.status_code == 404:
                 return RepoSummary(ref=ref, exists=False, fetched=True)
             if resp.status_code >= 400:
@@ -458,6 +476,7 @@ def _fetch_repo(bb_client, gh_client, ref: RepoRef) -> RepoSummary:
 
 
 # ---------- Jenkins job fetching ----------
+
 
 def _fetch_jenkins_job(jenkins_client, ref: JenkinsJobRef) -> JenkinsJobSummary:
     if jenkins_client is None:
@@ -504,9 +523,10 @@ def _fetch_jenkins_job(jenkins_client, ref: JenkinsJobRef) -> JenkinsJobSummary:
                 ts = bd.get("timestamp")
                 if isinstance(ts, (int, float)):
                     from datetime import datetime, timezone
-                    last_at = datetime.fromtimestamp(
-                        ts / 1000, tz=timezone.utc
-                    ).isoformat(timespec="seconds")
+
+                    last_at = datetime.fromtimestamp(ts / 1000, tz=timezone.utc).isoformat(
+                        timespec="seconds"
+                    )
         except requests.RequestException:
             pass  # last-build detail is best-effort
 
@@ -549,6 +569,7 @@ def _service_candidates(t: Ticket, max_candidates: int = 3) -> list[str]:
 
 # ---------- enrichment ----------
 
+
 def enrich(
     jira: JiraClient,
     key: str,
@@ -571,9 +592,7 @@ def enrich(
 
     # Everything else the LLM should still see, minus URLs we already probed.
     already_seen = (
-        {p.ref.url for p in prs}
-        | {r.ref.url for r in repos}
-        | {j.ref.url for j in jenkins_jobs}
+        {p.ref.url for p in prs} | {r.ref.url for r in repos} | {j.ref.url for j in jenkins_jobs}
     )
     other = _collect_other_links(ticket, remote, already_seen)
 
@@ -740,9 +759,7 @@ def _format_workload_evidence(probes: list[dict[str, Any]]) -> str:
                 f"×{ev.get('count', 1)} @ {(ev.get('last') or '')[:16]} — "
                 f"{_trim(ev.get('message') or '', 160)}"
             )
-        blocks.append(
-            "\n".join([header] + pod_lines + event_lines)
-        )
+        blocks.append("\n".join([header] + pod_lines + event_lines))
     return "\n".join(blocks)
 
 
@@ -751,10 +768,7 @@ def _format_repo_evidence(repos: list[RepoSummary]) -> str:
         return "(no repo URLs found in ticket, or no matching integration configured)"
     lines = []
     for r in repos:
-        header = (
-            f"- [{r.ref.provider}] {r.ref.owner_or_workspace}/"
-            f"{r.ref.repo}  {r.ref.url}"
-        )
+        header = f"- [{r.ref.provider}] {r.ref.owner_or_workspace}/{r.ref.repo}  {r.ref.url}"
         if r.fetched:
             if r.exists:
                 header += " · **EXISTS**"
@@ -803,10 +817,12 @@ def _format_jenkins_evidence(jobs: list[JenkinsJobSummary]) -> str:
 
 def build_prompt(et: EnrichedTicket, category: Optional[str]) -> str:
     t = et.ticket
-    comments = "\n\n".join(
-        f"— {c.author} @ {c.created[:10]}:\n{_trim(c.body, 500)}"
-        for c in t.comments[-8:]
-    ) or "(no comments)"
+    comments = (
+        "\n\n".join(
+            f"— {c.author} @ {c.created[:10]}:\n{_trim(c.body, 500)}" for c in t.comments[-8:]
+        )
+        or "(no comments)"
+    )
 
     prs_section = _format_pr_evidence(et.prs)
     repos_section = _format_repo_evidence(et.repos)
@@ -853,6 +869,7 @@ Updated: {t.updated[:10]}
 
 # ---------- entry point ----------
 
+
 @dataclass
 class InvestigationResult:
     key: str
@@ -864,7 +881,10 @@ class InvestigationResult:
     warnings: list[str] = field(default_factory=list)
 
 
-VERDICT_RE = re.compile(r"^\**Verdict:?\**\s*[:\-]?\s*(REAL|LIKELY_REAL|NEEDS_INFO|LIKELY_INVALID|INVALID)", re.MULTILINE | re.IGNORECASE)
+VERDICT_RE = re.compile(
+    r"^\**Verdict:?\**\s*[:\-]?\s*(REAL|LIKELY_REAL|NEEDS_INFO|LIKELY_INVALID|INVALID)",
+    re.MULTILINE | re.IGNORECASE,
+)
 
 
 def _extract_verdict(text: str) -> str:
@@ -883,7 +903,12 @@ def _collect_warnings(et: EnrichedTicket) -> list[str]:
     out: list[str] = []
     for r in et.repos:
         if not r.fetched and r.error and "not configured" in r.error.lower():
-            provider = r.ref.provider.replace("-", " ").title().replace("Cloud", "Cloud").replace("Dc", "DC")
+            provider = (
+                r.ref.provider.replace("-", " ")
+                .title()
+                .replace("Cloud", "Cloud")
+                .replace("Dc", "DC")
+            )
             out.append(
                 f"{provider} URL detected ({r.ref.url}) but {r.error}. "
                 f"Configure it in .env and re-run to get a live check."
@@ -896,9 +921,10 @@ def _collect_warnings(et: EnrichedTicket) -> list[str]:
                 f"but {pr.error}. Configure it in .env to probe PR state."
             )
     for j in et.jenkins_jobs:
-        if not j.fetched and j.error and (
-            "not configured" in j.error.lower()
-            or "host mismatch" in j.error.lower()
+        if (
+            not j.fetched
+            and j.error
+            and ("not configured" in j.error.lower() or "host mismatch" in j.error.lower())
         ):
             out.append(f"Jenkins URL detected but {j.error}.")
     return out
@@ -929,8 +955,12 @@ def investigate(
         except Exception as exc:  # noqa: BLE001
             results.append(
                 InvestigationResult(
-                    key=key, url="", summary="", verdict_line="",
-                    body="", error=f"fetch failed: {exc}",
+                    key=key,
+                    url="",
+                    summary="",
+                    verdict_line="",
+                    body="",
+                    error=f"fetch failed: {exc}",
                 )
             )
             continue
@@ -944,8 +974,12 @@ def investigate(
         except ProviderError as exc:
             results.append(
                 InvestigationResult(
-                    key=key, url=et.ticket.url, summary=et.ticket.summary,
-                    verdict_line="", body="", error=f"LLM failed: {exc}",
+                    key=key,
+                    url=et.ticket.url,
+                    summary=et.ticket.summary,
+                    verdict_line="",
+                    body="",
+                    error=f"LLM failed: {exc}",
                 )
             )
             continue

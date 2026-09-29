@@ -7,7 +7,6 @@ from typing import Any, Optional
 import requests
 from requests.auth import HTTPBasicAuth
 
-
 TICKET_FIELDS = [
     "summary",
     "status",
@@ -24,10 +23,7 @@ TICKET_FIELDS = [
 ]
 
 # Cloudflare/AtlassianEdge blocks the default python-requests UA on REST paths.
-DEFAULT_UA = (
-    "Mozilla/5.0 (compatible; watcher/0.1; +https://github.com/) "
-    "python-requests"
-)
+DEFAULT_UA = "Mozilla/5.0 (compatible; watcher/0.1; +https://github.com/) python-requests"
 
 CLOUD_ID_RE = re.compile(r"^[0-9a-fA-F-]{36}$")
 
@@ -127,9 +123,7 @@ def _parse_ticket(browse_base: str, raw: dict[str, Any]) -> Ticket:
         due_date=fields.get("duedate"),
         reporter=reporter,
         labels=list(fields.get("labels") or []),
-        components=[
-            c.get("name", "") for c in (fields.get("components") or []) if c.get("name")
-        ],
+        components=[c.get("name", "") for c in (fields.get("components") or []) if c.get("name")],
         description=_text_field(fields.get("description")),
         comments=comments,
     )
@@ -189,9 +183,7 @@ class JiraClient:
             self.api_version = "2"
             self.api_base_url = self.site_url
         else:
-            raise RuntimeError(
-                f"Unknown JIRA flavor {flavor!r}. Use 'cloud' or 'server'."
-            )
+            raise RuntimeError(f"Unknown JIRA flavor {flavor!r}. Use 'cloud' or 'server'.")
 
     # ---------- diagnostics ----------
 
@@ -250,9 +242,7 @@ class JiraClient:
         """Fetch a single issue with all fields for deep investigation."""
         url = self._url(f"issue/{key}")
         params = {"fields": "*all", "expand": "renderedFields"}
-        resp = self.session.get(
-            url, params=params, auth=self.auth, timeout=self.timeout
-        )
+        resp = self.session.get(url, params=params, auth=self.auth, timeout=self.timeout)
         self._check(resp, f"get_issue({key})")
         return _parse_ticket(self.site_url, resp.json())
 
@@ -343,9 +333,7 @@ class JiraClient:
                 url = fallback
 
             self._log(f"[cloud] POST {url} page={page}")
-            resp = self.session.post(
-                url, json=payload, auth=self.auth, timeout=self.timeout
-            )
+            resp = self.session.post(url, json=payload, auth=self.auth, timeout=self.timeout)
             if not use_fallback and resp.status_code in (404, 410):
                 self._log(f"  search/jql {resp.status_code} → falling back to /search")
                 use_fallback = True

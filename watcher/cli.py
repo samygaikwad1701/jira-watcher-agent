@@ -4,7 +4,6 @@ import argparse
 import re
 import sys
 import time
-from collections import Counter
 from datetime import datetime
 
 from rich.align import Align
@@ -32,7 +31,6 @@ from .memory import Memory, load_memory
 from .providers import ProviderError
 from .summarizer import rule_based_digest, summarize
 
-
 CHECK_TARGETS = ("all", "jira", "bitbucket", "jenkins", "github", "eks")
 
 
@@ -46,11 +44,11 @@ _LOGO_ROWS = [
     ("bright_black", r"         ▄▄▓▓█████████████████▓▓▄▄         "),
     ("bright_black", r"      ▄▓█▀▀░░░░░░░░░░░░░░░░░░░░▀▀█▓▄      "),
     ("bright_black", r"   ▄██▀░░░░░░░░  ▄▄█████▄▄  ░░░░░░░░▀██▄   "),
-    ("cyan",         r" ▄█▀░░░░░░░░   ▄██▀░░░░░▀██▄   ░░░░░░░░▀█▄ "),
-    ("cyan",         r"██░░░░░░░░    ██▀  ▄███▄  ▀██    ░░░░░░░░██"),
-    ("bright_cyan",  r"█░░░░░░░░    ██   ██▓▓▓██   ██    ░░░░░░░░█"),
-    ("cyan",         r"██░░░░░░░░    ██▄  ▀███▀  ▄██    ░░░░░░░░██"),
-    ("cyan",         r" ▀█▄░░░░░░░░   ▀██▄░░░░░▄██▀   ░░░░░░░░▄█▀ "),
+    ("cyan", r" ▄█▀░░░░░░░░   ▄██▀░░░░░▀██▄   ░░░░░░░░▀█▄ "),
+    ("cyan", r"██░░░░░░░░    ██▀  ▄███▄  ▀██    ░░░░░░░░██"),
+    ("bright_cyan", r"█░░░░░░░░    ██   ██▓▓▓██   ██    ░░░░░░░░█"),
+    ("cyan", r"██░░░░░░░░    ██▄  ▀███▀  ▄██    ░░░░░░░░██"),
+    ("cyan", r" ▀█▄░░░░░░░░   ▀██▄░░░░░▄██▀   ░░░░░░░░▄█▀ "),
     ("bright_black", r"   ▀██▄░░░░░░░░  ▀▀█████▀▀  ░░░░░░░░▄██▀   "),
     ("bright_black", r"      ▀▓█▄▄░░░░░░░░░░░░░░░░░░░░▄▄█▓▀      "),
     ("bright_black", r"         ▀▀▓▓█████████████████▓▓▀▀         "),
@@ -94,23 +92,13 @@ def print_banner(cfg=None) -> None:
     title = Text()
     title.append("Jira Watcher Agent ", style="bold bright_cyan")
     console.print(Align.center(title))
-    console.print(
-        Align.center(f"[dim]v{__version__}[/dim]")
-    )
-    console.print(
-        Align.center(
-            "[dim]AI-powered JIRA planner, organizer & triage CLI[/dim]"
-        )
-    )
+    console.print(Align.center(f"[dim]v{__version__}[/dim]"))
+    console.print(Align.center("[dim]AI-powered JIRA planner, organizer & triage CLI[/dim]"))
     console.print()
 
     provider = getattr(cfg, "llm_provider", None) if cfg else None
     if provider:
-        console.print(
-            Align.center(
-                f"provider [cyan]{provider}[/cyan]     {_integration_pills()}"
-            )
-        )
+        console.print(Align.center(f"provider [cyan]{provider}[/cyan]     {_integration_pills()}"))
     else:
         console.print(Align.center(_integration_pills()))
     console.print()
@@ -143,9 +131,7 @@ def _produce(cfg, tickets: list[Ticket], memory: Memory, use_llm: bool) -> str:
     if not use_llm:
         return rule_based_digest(tickets, memory)
     try:
-        digest, _ = summarize(
-            tickets, memory, cfg.llm_provider, cli_override=cfg.llm_cli_path
-        )
+        digest, _ = summarize(tickets, memory, cfg.llm_provider, cli_override=cfg.llm_cli_path)
         return digest
     except ProviderError as exc:
         console.print(f"[yellow]LLM ({cfg.llm_provider}) failed: {exc}[/yellow]")
@@ -173,9 +159,7 @@ def run_once(
     # and in-memory Memory, so no extra JIRA calls happen for queue selection.
     if interactive and use_llm and sys.stdin.isatty() and sys.stdout.isatty():
         try:
-            _interactive_resolve_loop(
-                cfg, tickets, memory, client, kube_context_override
-            )
+            _interactive_resolve_loop(cfg, tickets, memory, client, kube_context_override)
         except (KeyboardInterrupt, EOFError):
             console.print("\n[dim]interactive resolve cancelled.[/dim]")
 
@@ -194,9 +178,7 @@ def _interactive_resolve_loop(
     hits JIRA again, and only for the specific keys the user picks.
     """
     console.print()
-    if not Confirm.ask(
-        "[bold]Investigate any tickets from this list?[/bold]", default=False
-    ):
+    if not Confirm.ask("[bold]Investigate any tickets from this list?[/bold]", default=False):
         return
 
     bb_client = bitbucket_from_env()
@@ -219,8 +201,7 @@ def _interactive_resolve_loop(
         counts = memory.category_counts(ticket_keys)
         if counts:
             shown = ", ".join(
-                f"{cat} ({n})"
-                for cat, n in sorted(counts.items(), key=lambda x: -x[1])
+                f"{cat} ({n})" for cat, n in sorted(counts.items(), key=lambda x: -x[1])
             )
             console.print(f"[dim]Available categories: {shown}[/dim]")
 
@@ -241,9 +222,7 @@ def _interactive_resolve_loop(
             keys = [t.upper() for t in tokens if key_pattern.match(t)]
             invalid = [t for t in tokens if not key_pattern.match(t)]
             if invalid:
-                console.print(
-                    f"[yellow]Ignoring non-key tokens: {', '.join(invalid)}[/yellow]"
-                )
+                console.print(f"[yellow]Ignoring non-key tokens: {', '.join(invalid)}[/yellow]")
             if not keys:
                 console.print("[yellow]No valid keys entered.[/yellow]")
                 if not Confirm.ask("Try another selection?", default=True):
@@ -269,8 +248,7 @@ def _interactive_resolve_loop(
             keys = resolve_keys_for_category(memory, tickets, category, max(1, limit))
             if not keys:
                 console.print(
-                    f"[yellow]No tickets in the current queue are tagged "
-                    f"'{category}'.[/yellow]"
+                    f"[yellow]No tickets in the current queue are tagged '{category}'.[/yellow]"
                 )
                 if not Confirm.ask("Try another selection?", default=True):
                     return
@@ -297,9 +275,7 @@ def _interactive_resolve_loop(
         else:
             _render_investigation(results)
 
-        if not Confirm.ask(
-            "[bold]Investigate more from this list?[/bold]", default=False
-        ):
+        if not Confirm.ask("[bold]Investigate more from this list?[/bold]", default=False):
             break
 
 
@@ -323,9 +299,7 @@ def run_watch(cfg, client: JiraClient, memory: Memory, use_llm: bool, interval: 
             _render(cfg, tickets, summary, memory)
             last_seen = fp
         else:
-            console.print(
-                f"[dim]{datetime.now().strftime('%H:%M:%S')} — no changes[/dim]"
-            )
+            console.print(f"[dim]{datetime.now().strftime('%H:%M:%S')} — no changes[/dim]")
         time.sleep(interval)
 
 
@@ -368,10 +342,7 @@ def _check_jira(cfg) -> IntegrationStatus:
         name="jira",
         ok=True,
         identity=str(
-            info.get("displayName")
-            or info.get("emailAddress")
-            or info.get("name")
-            or "?"
+            info.get("displayName") or info.get("emailAddress") or info.get("name") or "?"
         ),
         details={
             "flavor": cfg.jira_flavor,
@@ -442,7 +413,9 @@ def _ensure_kube_context(eks_client, interactive: bool) -> bool:
         return False
 
     # Interactive picker.
-    console.print("\n[bold]Available kubectl contexts[/bold]  [dim](read-only probes will use the one you pick)[/dim]")
+    console.print(
+        "\n[bold]Available kubectl contexts[/bold]  [dim](read-only probes will use the one you pick)[/dim]"
+    )
     table = Table(show_edge=False, header_style="dim")
     table.add_column("#", justify="right", style="cyan")
     table.add_column("Context")
@@ -469,9 +442,7 @@ def _ensure_kube_context(eks_client, interactive: bool) -> bool:
     elif raw in numbered:
         chosen = raw
     if not chosen:
-        console.print(
-            f"[yellow]'{raw}' isn't a listed context — skipping EKS probes.[/yellow]"
-        )
+        console.print(f"[yellow]'{raw}' isn't a listed context — skipping EKS probes.[/yellow]")
         return False
 
     eks_client.set_kube_context(chosen)
@@ -522,9 +493,7 @@ def _render_investigation(results: list[InvestigationResult]) -> None:
 
 def run_resolve(cfg, args) -> int:
     if not (args.keys or args.category):
-        console.print(
-            "[red]--resolve needs either --keys PROJ-1,PROJ-2 or --category NAME.[/red]"
-        )
+        console.print("[red]--resolve needs either --keys PROJ-1,PROJ-2 or --category NAME.[/red]")
         return 2
 
     client = JiraClient(
@@ -543,9 +512,7 @@ def run_resolve(cfg, args) -> int:
         # already chose exactly which tickets they want investigated.
         keys = [k.strip().upper() for k in args.keys.split(",") if k.strip()]
     else:
-        console.print(
-            f"[dim]Loading currently-assigned tickets tagged '{args.category}'…[/dim]"
-        )
+        console.print(f"[dim]Loading currently-assigned tickets tagged '{args.category}'…[/dim]")
         try:
             tickets = client.assigned_to_me(cfg.jira_jql)
         except Exception as exc:  # noqa: BLE001
@@ -601,9 +568,7 @@ def run_resolve(cfg, args) -> int:
 def run_eks_login() -> int:
     client = eks_from_env()
     if client is None:
-        console.print(
-            "[red]EKS not configured — set EKS_CLUSTER_NAME and AWS_REGION.[/red]"
-        )
+        console.print("[red]EKS not configured — set EKS_CLUSTER_NAME and AWS_REGION.[/red]")
         return 2
     status = client.update_kubeconfig()
     if status.ok:
@@ -635,7 +600,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--provider",
         choices=SUPPORTED_PROVIDERS,
         default=None,
-        help=f"LLM CLI to use (default: from LLM_PROVIDER env, else 'claude').",
+        help="LLM CLI to use (default: from LLM_PROVIDER env, else 'claude').",
     )
     parser.add_argument(
         "--cli-path",

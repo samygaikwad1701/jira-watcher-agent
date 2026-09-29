@@ -19,8 +19,13 @@ class IntegrationStatus:
     hint: Optional[str] = None
 
     @classmethod
-    def skipped(cls, name: str, reason: str) -> "IntegrationStatus":
-        return cls(name=name, ok=False, error=f"not configured: {reason}", hint="set the required env vars in .env")
+    def skipped(cls, name: str, reason: str) -> IntegrationStatus:
+        return cls(
+            name=name,
+            ok=False,
+            error=f"not configured: {reason}",
+            hint="set the required env vars in .env",
+        )
 
 
 def keychain_password(service: str, account: str) -> Optional[str]:

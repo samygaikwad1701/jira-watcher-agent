@@ -15,12 +15,10 @@ from __future__ import annotations
 import json
 import re
 from datetime import datetime, timezone
-from typing import Iterable
 
 from .jira_client import Ticket
 from .memory import CATEGORIES, Memory
 from .providers import run_provider
-
 
 CATEGORY_BLOCK_MARKER = "===CATEGORIES==="
 
@@ -29,7 +27,7 @@ SYSTEM_INSTRUCTIONS = f"""You triage JIRA tickets for an engineer.
 You receive a JSON payload:
 - `known`: tickets already tagged with a category (use as-is).
 - `to_tag`: tickets that need a category picked from this list:
-  {', '.join(CATEGORIES)}.
+  {", ".join(CATEGORIES)}.
 
 Produce OUTPUT in two parts separated by the literal line `{CATEGORY_BLOCK_MARKER}`.
 
@@ -51,9 +49,7 @@ def _days_since(iso_ts: str) -> int:
         return -1
     try:
         # JIRA returns e.g. "2026-09-20T14:23:00.000+0000"
-        dt = datetime.strptime(iso_ts[:19], "%Y-%m-%dT%H:%M:%S").replace(
-            tzinfo=timezone.utc
-        )
+        dt = datetime.strptime(iso_ts[:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)
     except ValueError:
         return -1
     return max(0, (datetime.now(timezone.utc) - dt).days)

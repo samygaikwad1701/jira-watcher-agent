@@ -10,9 +10,8 @@ The registry `INTEGRATIONS` maps short names to `from_env` factories so the
 CLI can iterate uniformly.
 """
 
-from ._base import IntegrationStatus
 from . import bitbucket, eks, github, jenkins
-
+from ._base import IntegrationStatus
 
 INTEGRATIONS = {
     "bitbucket": bitbucket.from_env,

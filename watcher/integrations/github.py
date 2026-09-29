@@ -17,7 +17,6 @@ import requests
 
 from ._base import IntegrationStatus
 
-
 USER_AGENT = "watcher-github/0.1"
 
 
@@ -63,13 +62,9 @@ class GitHubClient:
                 hint="Run `gh auth login` and retry.",
             )
         except FileNotFoundError:
-            return IntegrationStatus(
-                name="github", ok=False, error="gh CLI not on PATH"
-            )
+            return IntegrationStatus(name="github", ok=False, error="gh CLI not on PATH")
         except subprocess.TimeoutExpired:
-            return IntegrationStatus(
-                name="github", ok=False, error="gh api /user timed out"
-            )
+            return IntegrationStatus(name="github", ok=False, error="gh api /user timed out")
         try:
             data = json.loads(result.stdout)
         except json.JSONDecodeError:
@@ -96,17 +91,14 @@ class GitHubClient:
         try:
             resp = self.session.get(f"{self.api_base}/user", timeout=self.timeout)
         except requests.RequestException as exc:
-            return IntegrationStatus(
-                name="github", ok=False, error=f"network error: {exc}"
-            )
+            return IntegrationStatus(name="github", ok=False, error=f"network error: {exc}")
         if resp.status_code >= 400:
             return IntegrationStatus(
                 name="github",
                 ok=False,
                 error=f"HTTP {resp.status_code}: {resp.text[:200]}",
                 hint=(
-                    "Token needs at least `read:user` scope. "
-                    "For private-repo access, add `repo`."
+                    "Token needs at least `read:user` scope. For private-repo access, add `repo`."
                 ),
             )
         data = resp.json()

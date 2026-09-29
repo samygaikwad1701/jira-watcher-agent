@@ -1,0 +1,80 @@
+name: Bug report
+description: Something in watcher is misbehaving.
+title: "[bug] "
+labels: [bug, triage]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What went wrong?
+      description: One or two sentences describing the behaviour.
+      placeholder: "watcher --check bitbucket returned 500 instead of skipping"
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction steps
+      description: Exact commands, in order. Redact any tokens or hostnames.
+      render: bash
+      placeholder: |
+        1. `pip install jira-watcher-agent==0.1.0`
+        2. Set BITBUCKET_API_TOKEN to an invalid value
+        3. Run `watcher --check bitbucket`
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+      placeholder: "A FAIL row with a 401 hint, not an unhandled exception."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What actually happened
+      description: Paste the terminal output. Use `--debug` where relevant.
+      render: text
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: watcher version
+      description: Output of `watcher --version`.
+      placeholder: "jira-watcher-agent 0.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      description: Output of `python --version`.
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "macOS 14.5 / Ubuntu 22.04 / Windows 11 WSL"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: flavor
+    attributes:
+      label: JIRA flavor
+      options: [Cloud, Server, "Server / DC on custom domain", "N/A"]
+
+  - type: textarea
+    id: extras
+    attributes:
+      label: Anything else
+      description: Screenshots, hunches, related PRs, workarounds you found.

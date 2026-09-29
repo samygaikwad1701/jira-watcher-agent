@@ -1,0 +1,31 @@
+version: 2
+
+# Automated dependency updates. Each PR opens against `main` and runs the
+# CI suite; if it's green, merge it. Dependabot groups small ecosystem
+# updates so we get one PR per week instead of one per package.
+
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - python
+    groups:
+      python-minor:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+      - ci
+    groups:
+      actions:
+        patterns: ["*"]

@@ -10,11 +10,10 @@ from __future__ import annotations
 
 import json
 from collections import Counter
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Iterable
-
 
 CATEGORIES = (
     "bug",
@@ -58,7 +57,7 @@ class TicketRecord:
         }
 
     @classmethod
-    def from_dict(cls, raw: dict) -> "TicketRecord":
+    def from_dict(cls, raw: dict) -> TicketRecord:
         return cls(
             key=raw["key"],
             category=raw.get("category", "other"),
@@ -77,9 +76,7 @@ class Memory:
     def get(self, key: str) -> TicketRecord | None:
         return self.tickets.get(key)
 
-    def upsert(
-        self, key: str, signature: str, summary: str, category: str
-    ) -> TicketRecord:
+    def upsert(self, key: str, signature: str, summary: str, category: str) -> TicketRecord:
         now = _now_iso()
         existing = self.tickets.get(key)
         if existing:

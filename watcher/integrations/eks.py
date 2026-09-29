@@ -77,8 +77,7 @@ class EksClient:
         head = args[0]
         if head not in {"get", "config", "describe"}:
             raise ValueError(
-                f"read-only kubectl guard: subcommand {head!r} is not allowed "
-                f"during investigation"
+                f"read-only kubectl guard: subcommand {head!r} is not allowed during investigation"
             )
         cmd = ["kubectl"]
         if self.kube_context:
@@ -109,7 +108,7 @@ class EksClient:
         """Set the context used for subsequent probing calls. Does NOT run
         `kubectl config use-context` — we pass `--context` per call to avoid
         mutating the user's kubeconfig state."""
-        self.kube_context = (name or None)
+        self.kube_context = name or None
 
     def _require_binaries(self, *binaries: str) -> Optional[IntegrationStatus]:
         for binary in binaries:
@@ -119,8 +118,7 @@ class EksClient:
                     ok=False,
                     error=f"{binary!r} not on PATH",
                     hint=(
-                        "Install both `aws` (AWS CLI v2) and `kubectl` "
-                        "before running EKS checks."
+                        "Install both `aws` (AWS CLI v2) and `kubectl` before running EKS checks."
                     ),
                 )
         return None
@@ -224,7 +222,6 @@ class EksClient:
             },
         )
 
-
     # ---------- workload probing (READ ONLY) ----------
 
     def probe_workload(self, name: str, namespace: Optional[str] = None) -> dict:
@@ -270,13 +267,9 @@ class EksClient:
         status = data.get("status") or {}
         spec = data.get("spec") or {}
         conditions = status.get("conditions") or []
-        available = next(
-            (c for c in conditions if c.get("type") == "Available"), {}
-        ) or {}
+        available = next((c for c in conditions if c.get("type") == "Available"), {}) or {}
 
-        pods = self._kubectl(
-            ["get", "pods", "-n", ns, "-l", f"app={name}", "-o", "json"]
-        )
+        pods = self._kubectl(["get", "pods", "-n", ns, "-l", f"app={name}", "-o", "json"])
         pod_summary: list[dict] = []
         if pods.returncode == 0:
             try:
@@ -287,9 +280,7 @@ class EksClient:
                 pmeta = item.get("metadata") or {}
                 pstatus = item.get("status") or {}
                 container_statuses = pstatus.get("containerStatuses") or []
-                restart_count = sum(
-                    int(c.get("restartCount", 0)) for c in container_statuses
-                )
+                restart_count = sum(int(c.get("restartCount", 0)) for c in container_statuses)
                 waiting_reasons = [
                     ((c.get("state") or {}).get("waiting") or {}).get("reason")
                     for c in container_statuses
@@ -308,10 +299,15 @@ class EksClient:
 
         events = self._kubectl(
             [
-                "get", "events", "-n", ns,
-                "--field-selector", f"involvedObject.name={name}",
+                "get",
+                "events",
+                "-n",
+                ns,
+                "--field-selector",
+                f"involvedObject.name={name}",
                 "--sort-by=.lastTimestamp",
-                "-o", "json",
+                "-o",
+                "json",
             ]
         )
         event_summary: list[dict] = []
@@ -351,11 +347,7 @@ class EksClient:
 
 def from_env() -> Optional[EksClient]:
     cluster = (os.environ.get("EKS_CLUSTER_NAME") or "").strip()
-    region = (
-        os.environ.get("EKS_REGION")
-        or os.environ.get("AWS_REGION")
-        or ""
-    ).strip()
+    region = (os.environ.get("EKS_REGION") or os.environ.get("AWS_REGION") or "").strip()
     if not cluster or not region:
         return None
     return EksClient(

@@ -17,7 +17,6 @@ from requests.auth import HTTPBasicAuth
 
 from ._base import IntegrationStatus, keychain_password
 
-
 DEFAULT_HOST = "bitbucket.org"
 USER_AGENT = "watcher-bitbucket/0.1"
 
@@ -40,15 +39,15 @@ class BitbucketClient:
         self.auth_mode = auth_mode
         self.timeout = timeout
         self.is_cloud = host == "bitbucket.org" or "api.bitbucket.org" in (api_base or "")
-        self.api_base = (api_base or (
-            "https://api.bitbucket.org/2.0" if self.is_cloud
-            else f"https://{host}/rest/api/1.0"
-        )).rstrip("/")
+        self.api_base = (
+            api_base
+            or (
+                "https://api.bitbucket.org/2.0" if self.is_cloud else f"https://{host}/rest/api/1.0"
+            )
+        ).rstrip("/")
 
         self.session = requests.Session()
-        self.session.headers.update(
-            {"Accept": "application/json", "User-Agent": USER_AGENT}
-        )
+        self.session.headers.update({"Accept": "application/json", "User-Agent": USER_AGENT})
         if auth_mode == "bearer":
             self.session.headers["Authorization"] = f"Bearer {token}"
             self.auth = None
@@ -66,9 +65,7 @@ class BitbucketClient:
                 url = f"{self.api_base}/users/{self.email.split('@')[0]}"
             resp = self.session.get(url, auth=self.auth, timeout=self.timeout)
         except requests.RequestException as exc:
-            return IntegrationStatus(
-                name="bitbucket", ok=False, error=f"network error: {exc}"
-            )
+            return IntegrationStatus(name="bitbucket", ok=False, error=f"network error: {exc}")
 
         if resp.status_code >= 400:
             return IntegrationStatus(
@@ -105,9 +102,7 @@ class BitbucketClient:
 def from_env() -> Optional[BitbucketClient]:
     token = (os.environ.get("BITBUCKET_API_TOKEN") or "").strip()
     email = (
-        os.environ.get("BITBUCKET_EMAIL")
-        or os.environ.get("BITBUCKET_USERNAME")
-        or ""
+        os.environ.get("BITBUCKET_EMAIL") or os.environ.get("BITBUCKET_USERNAME") or ""
     ).strip()
     if not token and email:
         token = keychain_password("bitbucket-api-token", email) or ""

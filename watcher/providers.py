@@ -11,7 +11,6 @@ import shutil
 import subprocess
 from dataclasses import dataclass
 
-
 DEFAULT_TIMEOUT_SEC = 180
 
 
@@ -54,8 +53,7 @@ def _resolve_binary(spec: ProviderSpec, override: str | None) -> str:
     path = shutil.which(binary)
     if not path:
         raise ProviderError(
-            f"{spec.name!r} CLI not found on PATH (looked for {binary!r}). "
-            f"{spec.install_hint}"
+            f"{spec.name!r} CLI not found on PATH (looked for {binary!r}). {spec.install_hint}"
         )
     return path
 
@@ -70,8 +68,7 @@ def run_provider(
     spec = PROVIDERS.get(provider_name)
     if spec is None:
         raise ProviderError(
-            f"Unknown provider {provider_name!r}. "
-            f"Supported: {', '.join(PROVIDERS)}."
+            f"Unknown provider {provider_name!r}. Supported: {', '.join(PROVIDERS)}."
         )
 
     binary = _resolve_binary(spec, cli_override)
@@ -86,14 +83,10 @@ def run_provider(
             timeout=timeout,
         )
     except subprocess.TimeoutExpired as exc:
-        raise ProviderError(
-            f"{spec.name} timed out after {timeout}s"
-        ) from exc
+        raise ProviderError(f"{spec.name} timed out after {timeout}s") from exc
 
     if result.returncode != 0:
         stderr = (result.stderr or "").strip()[:500]
-        raise ProviderError(
-            f"{spec.name} exited {result.returncode}: {stderr or '<no stderr>'}"
-        )
+        raise ProviderError(f"{spec.name} exited {result.returncode}: {stderr or '<no stderr>'}")
 
     return (result.stdout or "").strip()

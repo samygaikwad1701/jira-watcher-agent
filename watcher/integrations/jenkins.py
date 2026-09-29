@@ -16,7 +16,6 @@ from requests.auth import HTTPBasicAuth
 
 from ._base import IntegrationStatus, keychain_password
 
-
 USER_AGENT = "watcher-jenkins/0.1"
 
 
@@ -33,9 +32,7 @@ class JenkinsClient:
         self.token = token
         self.timeout = timeout
         self.session = requests.Session()
-        self.session.headers.update(
-            {"Accept": "application/json", "User-Agent": USER_AGENT}
-        )
+        self.session.headers.update({"Accept": "application/json", "User-Agent": USER_AGENT})
         self.auth = HTTPBasicAuth(username, token)
 
     def verify(self) -> IntegrationStatus:
@@ -43,9 +40,7 @@ class JenkinsClient:
         try:
             resp = self.session.get(url, auth=self.auth, timeout=self.timeout)
         except requests.RequestException as exc:
-            return IntegrationStatus(
-                name="jenkins", ok=False, error=f"network error: {exc}"
-            )
+            return IntegrationStatus(name="jenkins", ok=False, error=f"network error: {exc}")
 
         if resp.status_code >= 400:
             return IntegrationStatus(

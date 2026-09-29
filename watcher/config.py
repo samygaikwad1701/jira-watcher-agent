@@ -5,7 +5,6 @@ from typing import Optional
 
 from dotenv import load_dotenv
 
-
 DEFAULT_JQL = "assignee = currentUser() AND statusCategory != Done ORDER BY updated DESC"
 SUPPORTED_PROVIDERS = ("claude", "codex", "cursor")
 SUPPORTED_FLAVORS = ("cloud", "server")
@@ -78,20 +77,13 @@ def load_config() -> Config:
 
     provider = os.environ.get("LLM_PROVIDER", "claude").strip().lower()
     if provider not in SUPPORTED_PROVIDERS:
-        raise RuntimeError(
-            f"LLM_PROVIDER must be one of {SUPPORTED_PROVIDERS}, got {provider!r}."
-        )
+        raise RuntimeError(f"LLM_PROVIDER must be one of {SUPPORTED_PROVIDERS}, got {provider!r}.")
 
     base_url = _require("JIRA_BASE_URL").rstrip("/")
     token = _require("JIRA_API_TOKEN")
-    flavor = (
-        os.environ.get("JIRA_FLAVOR", "").strip().lower()
-        or _auto_flavor(base_url, token)
-    )
+    flavor = os.environ.get("JIRA_FLAVOR", "").strip().lower() or _auto_flavor(base_url, token)
     if flavor not in SUPPORTED_FLAVORS:
-        raise RuntimeError(
-            f"JIRA_FLAVOR must be one of {SUPPORTED_FLAVORS}, got {flavor!r}."
-        )
+        raise RuntimeError(f"JIRA_FLAVOR must be one of {SUPPORTED_FLAVORS}, got {flavor!r}.")
 
     email = (os.environ.get("JIRA_EMAIL") or "").strip() or None
     if flavor == "cloud" and not email:

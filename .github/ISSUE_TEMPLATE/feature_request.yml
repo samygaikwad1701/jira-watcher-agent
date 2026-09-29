@@ -1,0 +1,39 @@
+name: Feature request
+description: Suggest an enhancement or new capability.
+title: "[feature] "
+labels: [enhancement, triage]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: >
+        Describe the user problem, not the solution. Who runs into this and
+        how often?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed shape
+      description: >
+        A sketch of the CLI flag, config key, or code path you'd expect.
+        A rough interface is more valuable than a polished spec.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What else could solve this, and why isn't it enough?
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Rough scope
+      options:
+        - "Additive (new flag / new file)"
+        - "Change existing behaviour (needs CHANGELOG note)"
+        - "Breaking (needs a major version bump)"

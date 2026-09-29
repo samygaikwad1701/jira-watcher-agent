@@ -1,0 +1,10 @@
+# Every path defaults to the maintainer. GitHub auto-requests review from
+# @samygaikwad1701 on any PR touching these files.
+*                       @samygaikwad1701
+
+# Belt-and-braces for security-sensitive paths.
+/watcher/integrations/  @samygaikwad1701
+/watcher/jira_client.py @samygaikwad1701
+/watcher/providers.py   @samygaikwad1701
+/.github/               @samygaikwad1701
+/SECURITY.md            @samygaikwad1701
