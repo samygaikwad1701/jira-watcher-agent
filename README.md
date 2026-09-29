@@ -68,6 +68,8 @@ watcher --watch              # keep polling
 Three console commands ship with the package — pick whichever reads best
 in your muscle memory:
 
+<img width="464" height="297" alt="image" src="https://github.com/user-attachments/assets/b595c734-0932-46d7-b465-a4e751df84ce" />
+
 
 | Command              | What it is                                              |
 | -------------------- | ------------------------------------------------------- |
@@ -75,7 +77,7 @@ in your muscle memory:
 | `jira-watcher`       | Longer alias, disambiguates from other "watcher" tools. |
 | `jira-watcher-agent` | Full name — useful in scripts and docs.                 |
 
-
+<img width="1908" height="552" alt="image" src="https://github.com/user-attachments/assets/bee307aa-aa8e-40d2-b7db-0366bd8e6cdb" />
 
 
 First run produces an LLM-authored triage digest of every ticket assigned
